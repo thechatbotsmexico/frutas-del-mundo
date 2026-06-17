@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frutas del Mundo — Origen, Historia & Sabor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Nunito:wght@900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+    body { background: #0a0a0a; color: #fff; overflow-x: hidden; cursor: none; }
+
+    /* CURSOR */
+    .cursor {
+      width: 16px; height: 16px; border-radius: 50%; background: #fff;
+      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+      mix-blend-mode: difference; transform: translate(-50%, -50%);
+      transition: width .2s, height .2s;
+    }
+    .cursor.expand { width: 48px; height: 48px; }
+
+    /* PROGRESS BAR */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px; background: #fff;
+      width: 0%; z-index: 200; mix-blend-mode: difference;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 28px 48px; mix-blend-mode: difference;
+    }
+    .nav-logo {
+      font-family: 'Inter', sans-serif; font-weight: 900; font-size: 18px;
+      letter-spacing: 0.15em; text-transform: uppercase; color: #fff; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a {
+      font-family: 'Inter', sans-serif; font-weight: 400; font-size: 13px;
+      letter-spacing: 0.1em; text-transform: uppercase; color: #fff;
+      text-decoration: none; opacity: 0.7; transition: opacity .3s;
+    }
+    .nav-links a:hover { opacity: 1; }
+
+    /* SCROLL INDICATOR */
+    .scroll-indicator {
+      position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
+      z-index: 100; display: flex; flex-direction: column; align-items: center;
+      gap: 8px; transition: opacity .5s;
+    }
+    .scroll-indicator span {
+      font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.2em;
+      text-transform: uppercase; color: #fff; opacity: 0.5;
+    }
+    .scroll-line {
+      width: 1px; height: 40px; background: rgba(255,255,255,0.3);
+      position: relative; overflow: hidden;
+    }
+    .scroll-line::after {
+      content: ''; position: absolute; top: -100%; left: 0;
+      width: 100%; height: 100%; background: #fff;
+      animation: scrollLine 1.5s ease-in-out infinite;
+    }
+    @keyframes scrollLine { 0% { top: -100%; } 100% { top: 100%; } }
+
+    /* FRUIT NAV DOTS */
+    .fruit-nav {
+      position: fixed; right: 36px; top: 50%; transform: translateY(-50%);
+      z-index: 100; display: flex; flex-direction: column; gap: 16px;
+    }
+    .fruit-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,0.3); cursor: pointer; transition: all .3s;
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+    .fruit-dot.active { background: #fff; transform: scale(1.4); }
+
+    /* HORIZONTAL SCROLL */
+    #horizontal-section { position: relative; }
+    .horizontal-track { display: flex; width: 300vw; }
+
+    /* FRUIT SLIDE */
+    .fruit-slide {
+      width: 100vw; height: 100vh; position: relative; overflow: hidden;
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    /* BIG BACKGROUND WORD */
+    .bg-word {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(100px, 16vw, 240px);
+      font-weight: 900; text-transform: uppercase; white-space: nowrap;
+      z-index: 2; pointer-events: none; opacity: 0.1; letter-spacing: -0.02em;
+    }
+
+    /* SLIDE ZONES */
+    .slide-left {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 120px 56px 80px; position: relative; z-index: 10;
+    }
+    .slide-center {
+      position: relative; display: flex; align-items: center;
+      justify-content: center; z-index: 10;
+    }
+    .slide-right {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 120px 48px 80px 36px; position: relative; z-index: 10;
+    }
+
+    /* SLIDE TEXT ELEMENTS */
+    .slide-number {
+      font-size: clamp(64px, 8vw, 110px); font-weight: 900; line-height: 1;
+      margin-bottom: 24px; opacity: 0; transform: translateY(40px);
+    }
+    .slide-divider { width: 40px; height: 2px; margin-bottom: 32px; opacity: 0; }
+    .slide-tagline {
+      font-size: clamp(13px, 1.1vw, 15px); line-height: 1.8; opacity: 0;
+      transform: translateY(20px); max-width: 280px; font-weight: 300;
+    }
+    .slide-origin { margin-top: 40px; opacity: 0; transform: translateY(20px); }
+    .slide-origin-label {
+      font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+      opacity: 0.5; margin-bottom: 6px;
+    }
+    .slide-origin-value { font-size: 15px; font-weight: 700; }
+
+    /* FRUIT IMAGE CONTAINER */
+    .fruit-container {
+      position: relative; width: 420px; height: 420px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Ground shadow */
+    .fruit-shadow {
+      position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+      width: 280px; height: 40px;
+      background: radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, transparent 70%);
+      border-radius: 50%; z-index: 0;
+    }
+
+    /* The actual fruit image */
+    .fruit-img {
+      width: 380px; height: 380px;
+      object-fit: contain;
+      mix-blend-mode: luminosity;
+      will-change: transform;
+      position: relative; z-index: 2;
+      filter: drop-shadow(0 30px 60px rgba(0,0,0,0.6));
+    }
+
+    /* PARTICLES */
+    .particles {
+      position: absolute; inset: -120px; pointer-events: none; z-index: 1;
+    }
+    .particle { position: absolute; border-radius: 50%; opacity: 0; }
+
+    /* ACCORDION */
+    .accordion-title {
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 20px; opacity: 0;
+    }
+    .accordion-item {
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding: 18px 0; cursor: pointer; opacity: 0; transform: translateY(15px);
+    }
+    .accordion-item:last-child { border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .accordion-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 14px; font-weight: 600;
+    }
+    .accordion-plus { font-size: 20px; font-weight: 300; transition: transform .3s; }
+    .accordion-item.open .accordion-plus { transform: rotate(45deg); }
+    .accordion-body {
+      max-height: 0; overflow: hidden; transition: max-height .4s ease;
+      font-size: 12px; line-height: 1.8; opacity: 0.7;
+    }
+    .accordion-item.open .accordion-body { max-height: 300px; padding-top: 12px; }
+
+    /* ══ NARANJA ══ */
+    #slide-naranja { background: #D94E15; }
+    #slide-naranja .bg-word { font-family: 'Inter', sans-serif; color: #fff; }
+    #slide-naranja .slide-number,
+    #slide-naranja .slide-tagline,
+    #slide-naranja .slide-origin,
+    #slide-naranja .accordion-title,
+    #slide-naranja .accordion-item { font-family: 'Inter', sans-serif; color: #fff; }
+    #slide-naranja .slide-divider { background: #fff; }
+
+    /* ══ LIMÓN ══ */
+    #slide-limon { background: #1A3A0A; }
+    #slide-limon .bg-word { font-family: 'Nunito', sans-serif; color: #BBDD00; }
+    #slide-limon .slide-number,
+    #slide-limon .slide-tagline,
+    #slide-limon .slide-origin,
+    #slide-limon .accordion-title,
+    #slide-limon .accordion-item { font-family: 'Nunito', sans-serif; color: #C8E639; }
+    #slide-limon .slide-divider { background: #C8E639; }
+    #slide-limon .accordion-item { border-color: rgba(200,230,57,0.2); }
+
+    /* ══ UVA ══ */
+    #slide-uva { background: #180D2A; }
+    #slide-uva .bg-word { font-family: 'Playfair Display', serif; color: #8B5CC8; }
+    #slide-uva .slide-number,
+    #slide-uva .slide-tagline,
+    #slide-uva .slide-origin,
+    #slide-uva .accordion-title,
+    #slide-uva .accordion-item { font-family: 'Playfair Display', serif; color: #fff; }
+    #slide-uva .slide-divider { background: #9B6FD4; }
+    #slide-uva .accordion-item { border-color: rgba(155,111,212,0.25); }
+
+    /* ══ HERO ══ */
+    #hero {
+      height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #0a0a0a; position: relative; overflow: hidden;
+    }
+    .hero-eyebrow {
+      font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.3em;
+      text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 32px;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(56px, 9vw, 130px); font-weight: 700;
+      text-align: center; line-height: 0.95; letter-spacing: -0.02em; color: #fff;
+    }
+    .hero-title em { font-style: italic; color: #D94E15; }
+    .hero-subtitle {
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 300;
+      letter-spacing: 0.05em; color: rgba(255,255,255,0.45);
+      margin-top: 36px; text-align: center; max-width: 400px;
+    }
+    .hero-fruits-row { display: flex; gap: 48px; margin-top: 64px; align-items: center; }
+    .hero-fruit-item {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      opacity: 0; transform: translateY(30px);
+    }
+    .hero-fruit-icon { font-size: 48px; }
+    .hero-fruit-label {
+      font-family: 'Inter', sans-serif; font-size: 10px;
+      letter-spacing: 0.25em; text-transform: uppercase; color: rgba(255,255,255,0.4);
+    }
+    .hero-bg-circles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .hero-circle {
+      position: absolute; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    /* ══ OUTRO ══ */
+    #outro {
+      height: 100vh; background: #0a0a0a;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; position: relative; overflow: hidden;
+    }
+    .outro-label {
+      font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.3em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 24px;
+    }
+    .outro-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(40px, 6vw, 90px); font-weight: 400; font-style: italic;
+      text-align: center; color: #fff; line-height: 1.1; max-width: 800px;
+    }
+    .outro-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+      margin-top: 80px; width: 100%; max-width: 900px;
+      background: rgba(255,255,255,0.08);
+    }
+    .outro-cell {
+      background: #0a0a0a; padding: 40px 32px; text-align: center;
+      opacity: 0; transform: translateY(20px);
+    }
+    .outro-cell-num { font-family: 'Inter', sans-serif; font-size: 36px; font-weight: 900; margin-bottom: 8px; }
+    .outro-cell-label {
+      font-family: 'Inter', sans-serif; font-size: 11px;
+      letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.4);
+    }
+    .outro-cta { margin-top: 60px; display: flex; gap: 20px; }
+    .btn {
+      font-family: 'Inter', sans-serif; font-size: 12px; letter-spacing: 0.15em;
+      text-transform: uppercase; padding: 16px 36px;
+      border: 1px solid rgba(255,255,255,0.3); color: #fff;
+      background: transparent; cursor: pointer; transition: all .3s; text-decoration: none;
+    }
+    .btn:hover { background: #fff; color: #0a0a0a; }
+    .btn.filled { background: #D94E15; border-color: #D94E15; }
+    .btn.filled:hover { background: #fff; color: #0a0a0a; border-color: #fff; }
+    .outro-parallax-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .outro-float { position: absolute; font-size: 160px; opacity: 0.04; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="progress-bar" id="progressBar"></div>
+
+<nav>
+  <a href="#" class="nav-logo">Frutas del Mundo</a>
+  <ul class="nav-links">
+    <li><a href="#slide-naranja">Naranja</a></li>
+    <li><a href="#slide-limon">Limón</a></li>
+    <li><a href="#slide-uva">Uva</a></li>
+    <li><a href="#outro">Origen</a></li>
+  </ul>
+</nav>
+
+<div class="fruit-nav" id="fruitNav">
+  <div class="fruit-dot active" data-index="0" title="Naranja"></div>
+  <div class="fruit-dot" data-index="1" title="Limón"></div>
+  <div class="fruit-dot" data-index="2" title="Uva"></div>
+</div>
+
+<div class="scroll-indicator" id="scrollIndicator">
+  <span>Scroll</span>
+  <div class="scroll-line"></div>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-circles">
+    <div class="hero-circle" style="width:600px;height:600px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div class="hero-circle" style="width:900px;height:900px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div class="hero-circle" style="width:1200px;height:1200px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+  </div>
+  <p class="hero-eyebrow">Una guía sensorial</p>
+  <h1 class="hero-title" id="heroTitle">Tres <em>frutas,</em><br>tres mundos</h1>
+  <p class="hero-subtitle">Origen, historia y sabor de las frutas más icónicas del planeta.</p>
+  <div class="hero-fruits-row">
+    <div class="hero-fruit-item"><div class="hero-fruit-icon">🍊</div><span class="hero-fruit-label">Naranja</span></div>
+    <div class="hero-fruit-item" style="transform:translateY(-10px)"><div class="hero-fruit-icon">🍋</div><span class="hero-fruit-label">Limón</span></div>
+    <div class="hero-fruit-item"><div class="hero-fruit-icon">🍇</div><span class="hero-fruit-label">Uva</span></div>
+  </div>
+</section>
+
+<!-- HORIZONTAL SCROLL -->
+<div id="horizontal-section">
+  <div class="horizontal-track" id="track">
+
+    <!-- ══ NARANJA ══ -->
+    <div class="fruit-slide" id="slide-naranja">
+      <div class="bg-word">NARANJA</div>
+      <div class="particles" id="particles-naranja"></div>
+
+      <div class="slide-left">
+        <div class="slide-number" id="num-naranja">01</div>
+        <div class="slide-divider" id="div-naranja"></div>
+        <p class="slide-tagline" id="tag-naranja">
+          La fruta del sol. Cultivada durante más de 4,000 años, la naranja es el cítrico más consumido en el mundo y símbolo de vitalidad, alegría y abundancia.
+        </p>
+        <div class="slide-origin" id="origin-naranja">
+          <p class="slide-origin-label">Origen</p>
+          <p class="slide-origin-value">Sudeste Asiático · China, 2500 a.C.</p>
+        </div>
+      </div>
+
+      <div class="slide-center">
+        <div class="fruit-container" id="fc-naranja">
+          <div class="fruit-shadow"></div>
+          <img class="fruit-img" id="img-naranja" src="images/naranja.png" alt="Naranja" />
+        </div>
+      </div>
+
+      <div class="slide-right">
+        <p class="accordion-title" id="atitle-naranja">Descubre más</p>
+        <div class="accordion-item" id="acc-n-1">
+          <div class="accordion-header">Historia <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Originaria del cruce entre el pomelo y la mandarina en el sudeste asiático, la naranja llegó a Europa con los árabes en el siglo X. Colón la llevó a América en 1493. Hoy es el fruto cítrico más cultivado del mundo, con más de 79 millones de toneladas anuales.</div>
+        </div>
+        <div class="accordion-item" id="acc-n-2">
+          <div class="accordion-header">Nutrición <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Rica en vitamina C (70mg por fruto), flavonoides, potasio y ácido fólico. Una naranja media cubre el 100% de la ingesta diaria recomendada de vitamina C. Sus propiedades antioxidantes y antiinflamatorias están ampliamente documentadas.</div>
+        </div>
+        <div class="accordion-item" id="acc-n-3">
+          <div class="accordion-header">Usos <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Consumo fresco, zumos, mermeladas, confitería, aromaterapia y cosmética. El aceite esencial de su cáscara se usa en perfumería de alta gama. En gastronomía acompaña desde salsas hasta postres y cócteles clásicos como el Negroni.</div>
+        </div>
+        <div class="accordion-item" id="acc-n-4">
+          <div class="accordion-header">Variedades <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Más de 600 variedades: Valencia (zumo), Navel (mesa), Sanguina (color rojo intenso), Cara Cara (tonos rosados). Los mayores productores son Brasil, China, India, Estados Unidos y México.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LIMÓN ══ -->
+    <div class="fruit-slide" id="slide-limon">
+      <div class="bg-word">LIMÓN</div>
+      <div class="particles" id="particles-limon"></div>
+
+      <div class="slide-left">
+        <div class="slide-number" id="num-limon">02</div>
+        <div class="slide-divider" id="div-limon"></div>
+        <p class="slide-tagline" id="tag-limon">
+          Ácido, brillante, indomable. El limón conquista cada cocina del mundo con su intensidad única. Más que un fruto: un estado de ánimo.
+        </p>
+        <div class="slide-origin" id="origin-limon">
+          <p class="slide-origin-label">Origen</p>
+          <p class="slide-origin-value">Nordeste de India · Assam, s. I d.C.</p>
+        </div>
+      </div>
+
+      <div class="slide-center">
+        <div class="fruit-container" id="fc-limon">
+          <div class="fruit-shadow"></div>
+          <img class="fruit-img" id="img-limon" src="images/limon.png" alt="Limón" />
+        </div>
+      </div>
+
+      <div class="slide-right">
+        <p class="accordion-title">Descubre más</p>
+        <div class="accordion-item" id="acc-l-1">
+          <div class="accordion-header">Historia <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">El limón es un híbrido entre la cidra y la naranja amarga, originado en el noreste de India hace más de 2,500 años. Los árabes lo difundieron por el Mediterráneo en el siglo XII. En Europa fue símbolo de riqueza — los nobles lo regalaban en las cortes renacentistas.</div>
+        </div>
+        <div class="accordion-item" id="acc-l-2">
+          <div class="accordion-header">Nutrición <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Alto contenido en vitamina C, ácido cítrico, flavonoides y hesperidina. Propiedades alcalinizantes en el organismo, antibacterianas y digestivas. El ácido cítrico potencia la absorción de hierro no hemínico en el intestino.</div>
+        </div>
+        <div class="accordion-item" id="acc-l-3">
+          <div class="accordion-header">Usos <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Cocina mediterránea, asiática y latinoamericana. Limpieza natural, aromaterapia, cosmética anti-manchas. En coctelería es indispensable: Margarita, Mojito, Gin Tonic. Su cáscara rallada transforma masas, cremas y marinadas.</div>
+        </div>
+        <div class="accordion-item" id="acc-l-4">
+          <div class="accordion-header">Variedades <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Eureka, Lisboa, Meyer (más dulce y aromático), Femminello (italiana). El limón persa es el más cultivado comercialmente. México y Argentina son referentes en limón sin semilla. India lidera la producción mundial con 3.5 millones de toneladas al año.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ UVA ══ -->
+    <div class="fruit-slide" id="slide-uva">
+      <div class="bg-word">UVA</div>
+      <div class="particles" id="particles-uva"></div>
+
+      <div class="slide-left">
+        <div class="slide-number" id="num-uva">03</div>
+        <div class="slide-divider" id="div-uva"></div>
+        <p class="slide-tagline" id="tag-uva">
+          La uva es el fruto más cultivado de la historia humana. Desde los viñedos de la antigua Mesopotamia hasta las bodegas de Burdeos, su historia es la historia de la civilización.
+        </p>
+        <div class="slide-origin" id="origin-uva">
+          <p class="slide-origin-label">Origen</p>
+          <p class="slide-origin-value">Cáucaso Sur · Georgia, 6000 a.C.</p>
+        </div>
+      </div>
+
+      <div class="slide-center">
+        <div class="fruit-container" id="fc-uva">
+          <div class="fruit-shadow"></div>
+          <img class="fruit-img" id="img-uva" src="images/uva.png" alt="Uva" />
+        </div>
+      </div>
+
+      <div class="slide-right">
+        <p class="accordion-title" style="font-style:italic;">Descubre más</p>
+        <div class="accordion-item" id="acc-u-1">
+          <div class="accordion-header">Historia <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">La vid (Vitis vinifera) es una de las plantas cultivadas más antiguas. Evidencias arqueológicas en Georgia datan el vino de 6000 a.C. Los fenicios expandieron su cultivo por el Mediterráneo. Griegos y romanos la elevaron a símbolo divino — Dionisio y Baco son sus dioses tutelares.</div>
+        </div>
+        <div class="accordion-item" id="acc-u-2">
+          <div class="accordion-header">Nutrición <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Rica en resveratrol, quercetina, vitaminas B1 y B6, potasio y manganeso. El resveratrol tiene propiedades cardioprotectoras ampliamente estudiadas. Las uvas negras concentran mayor cantidad de antioxidantes que las variedades blancas o verdes.</div>
+        </div>
+        <div class="accordion-item" id="acc-u-3">
+          <div class="accordion-header">Usos <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Consumo fresco, vinificación (tinto, blanco, rosé, espumoso), pasas, jugo, vinagre, aceite de semilla de uva. En gastronomía combina con quesos, charcutería y salsas agridulces. La piel se usa en cosmética de alta gama por su concentración en antioxidantes.</div>
+        </div>
+        <div class="accordion-item" id="acc-u-4">
+          <div class="accordion-header">Variedades <span class="accordion-plus">+</span></div>
+          <div class="accordion-body">Más de 10,000 variedades cultivadas. Las más conocidas: Cabernet Sauvignon, Merlot, Chardonnay, Tempranillo, Moscatel, Thompson Seedless. Italia, Francia y España lideran en producción vinícola. China es el mayor productor mundial de uva de mesa.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /track -->
+</div><!-- /horizontal-section -->
+
+<!-- OUTRO -->
+<section id="outro">
+  <div class="outro-parallax-bg">
+    <div class="outro-float" style="top:10%;left:5%;transform:rotate(-15deg)">🍊</div>
+    <div class="outro-float" style="top:60%;right:8%;transform:rotate(20deg)">🍋</div>
+    <div class="outro-float" style="bottom:15%;left:40%;transform:rotate(5deg)">🍇</div>
+  </div>
+  <p class="outro-label">La naturaleza en cifras</p>
+  <h2 class="outro-title">Tres frutas que<br>cambiaron el mundo</h2>
+  <div class="outro-grid">
+    <div class="outro-cell" id="oc1"><div class="outro-cell-num" style="color:#D94E15">79M</div><div class="outro-cell-label">Toneladas de naranja / año</div></div>
+    <div class="outro-cell" id="oc2"><div class="outro-cell-num" style="color:#C8E639">19M</div><div class="outro-cell-label">Toneladas de limón / año</div></div>
+    <div class="outro-cell" id="oc3"><div class="outro-cell-num" style="color:#9B6FD4">77M</div><div class="outro-cell-label">Toneladas de uva / año</div></div>
+    <div class="outro-cell" id="oc4"><div class="outro-cell-num">+600</div><div class="outro-cell-label">Variedades de naranja</div></div>
+    <div class="outro-cell" id="oc5"><div class="outro-cell-num">4000</div><div class="outro-cell-label">Años de historia del limón</div></div>
+    <div class="outro-cell" id="oc6"><div class="outro-cell-num">10K+</div><div class="outro-cell-label">Variedades de uva</div></div>
+  </div>
+  <div class="outro-cta">
+    <a href="#hero" class="btn">Volver al inicio</a>
+    <a href="#slide-naranja" class="btn filled">Explorar frutas</a>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  // CURSOR
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.15, ease: 'power2.out' });
+  });
+  document.querySelectorAll('a, button, .accordion-item, .fruit-dot').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('expand'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('expand'));
+  });
+
+  // PROGRESS BAR
+  gsap.to('#progressBar', {
+    width: '100%', ease: 'none',
+    scrollTrigger: { trigger: 'body', start: 'top top', end: 'bottom bottom', scrub: true }
+  });
+
+  // HERO
+  const heroTl = gsap.timeline({ delay: 0.3 });
+  heroTl
+    .from('.hero-eyebrow', { opacity: 0, y: 20, duration: 0.8, ease: 'power3.out' })
+    .from('#heroTitle', { opacity: 0, y: 50, duration: 1, ease: 'power3.out' }, '-=0.5')
+    .from('.hero-subtitle', { opacity: 0, y: 20, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+    .to('.hero-fruit-item', { opacity: 1, y: 0, duration: 0.6, stagger: 0.15, ease: 'back.out(1.5)' }, '-=0.4');
+
+  // PARTICLES
+  function createParticles(containerId, color, count) {
+    const container = document.getElementById(containerId);
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.classList.add('particle');
+      const size = Math.random() * 16 + 4;
+      p.style.cssText = `
+        width:${size}px; height:${size}px; background:${color};
+        left:${10 + Math.random() * 80}%; top:${10 + Math.random() * 80}%;
+        border-radius:${Math.random() > 0.5 ? '50%' : '3px'}; opacity:0;
+      `;
+      container.appendChild(p);
+    }
+  }
+  createParticles('particles-naranja', 'rgba(255,180,80,0.55)', 22);
+  createParticles('particles-limon',  'rgba(180,220,40,0.55)',  22);
+  createParticles('particles-uva',    'rgba(160,100,220,0.55)', 22);
+
+  // HORIZONTAL SCROLL
+  const track = document.getElementById('track');
+  const totalSlides = 3;
+  const scrollMultiplier = 1.3;
+
+  ScrollTrigger.create({
+    trigger: '#horizontal-section',
+    start: 'top top',
+    end: () => `+=${window.innerWidth * (totalSlides - 1) * scrollMultiplier}`,
+    pin: true,
+    scrub: 1,
+    onUpdate: self => {
+      const progress = self.progress;
+      const x = progress * window.innerWidth * (totalSlides - 1) * -1;
+      gsap.set(track, { x });
+
+      // Nav dots
+      const activeIndex = Math.min(totalSlides - 1, Math.floor(progress * totalSlides));
+      document.querySelectorAll('.fruit-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === activeIndex);
+      });
+
+      // Scroll indicator
+      document.getElementById('scrollIndicator').style.opacity = progress > 0.02 ? 0 : 1;
+
+      // Per-slide progress
+      const sp = progress * (totalSlides - 1);
+      runSlide(sp,       0, 'naranja');
+      runSlide(sp - 1,   1, 'limon');
+      runSlide(sp - 2,   2, 'uva');
+    }
+  });
+
+  function runSlide(p, index, name) {
+    const clamped = Math.max(0, Math.min(1, p));
+
+    // ── FRUIT ROTATION (all 3) ──
+    const img = document.getElementById(`img-${name}`);
+    if (img) {
+      gsap.set(img, { rotation: clamped * 360, transformOrigin: '50% 50%' });
+    }
+
+    // ── SHADOW SCALE WITH ROTATION ──
+    const container = document.getElementById(`fc-${name}`);
+    if (container) {
+      const shadow = container.querySelector('.fruit-shadow');
+      if (shadow) {
+        const scaleX = 0.7 + 0.3 * Math.abs(Math.cos(clamped * Math.PI * 2));
+        gsap.set(shadow, { scaleX });
+      }
+    }
+
+    // ── TEXT REVEALS ──
+    if (clamped > 0.04) {
+      gsap.to(`#num-${name}`,    { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', overwrite: 'auto' });
+      gsap.to(`#div-${name}`,    { opacity: 1, duration: 0.5, delay: 0.08, overwrite: 'auto' });
+      gsap.to(`#tag-${name}`,    { opacity: 1, y: 0, duration: 0.7, delay: 0.16, ease: 'power3.out', overwrite: 'auto' });
+      gsap.to(`#origin-${name}`, { opacity: 1, y: 0, duration: 0.6, delay: 0.28, ease: 'power3.out', overwrite: 'auto' });
+      document.querySelectorAll(`#slide-${name} .accordion-item`).forEach((item, i) => {
+        gsap.to(item, { opacity: 1, y: 0, duration: 0.5, delay: 0.2 + i * 0.08, ease: 'power2.out', overwrite: 'auto' });
+      });
+      document.querySelectorAll(`#slide-${name} .accordion-title`).forEach(el => {
+        gsap.to(el, { opacity: 0.55, duration: 0.5, overwrite: 'auto' });
+      });
+    } else {
+      // Reset if scrolled back
+      gsap.to(`#num-${name}`,    { opacity: 0, y: 40, duration: 0.3, overwrite: 'auto' });
+      gsap.to(`#div-${name}`,    { opacity: 0, duration: 0.3, overwrite: 'auto' });
+      gsap.to(`#tag-${name}`,    { opacity: 0, y: 20, duration: 0.3, overwrite: 'auto' });
+      gsap.to(`#origin-${name}`, { opacity: 0, y: 20, duration: 0.3, overwrite: 'auto' });
+      document.querySelectorAll(`#slide-${name} .accordion-item`).forEach(item => {
+        gsap.to(item, { opacity: 0, y: 15, duration: 0.3, overwrite: 'auto' });
+      });
+    }
+
+    // ── PARTICLES ──
+    const particles = document.querySelectorAll(`#particles-${name} .particle`);
+    particles.forEach((particle, i) => {
+      const targetOpacity = clamped > 0.08 ? (0.25 + Math.sin(i * 1.3) * 0.2) : 0;
+      gsap.to(particle, {
+        opacity: targetOpacity,
+        y: Math.sin(clamped * Math.PI * 2 + i * 0.7) * 20,
+        x: Math.cos(clamped * Math.PI * 1.5 + i * 0.5) * 14,
+        rotation: clamped * 200 * (i % 2 === 0 ? 1 : -1),
+        duration: 0.5, overwrite: 'auto'
+      });
+    });
+  }
+
+  // ACCORDION
+  document.querySelectorAll('.accordion-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      item.closest('.fruit-slide').querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+
+  // NAV DOTS CLICK
+  document.querySelectorAll('.fruit-dot').forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      const section = document.getElementById('horizontal-section');
+      const totalScroll = window.innerWidth * (totalSlides - 1) * scrollMultiplier;
+      const targetScroll = section.offsetTop + (totalScroll / (totalSlides - 1)) * i;
+      window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    });
+  });
+
+  // OUTRO
+  gsap.from('.outro-title', {
+    opacity: 0, y: 60, duration: 1, ease: 'power3.out',
+    scrollTrigger: { trigger: '#outro', start: 'top 70%' }
+  });
+  gsap.from('.outro-label', {
+    opacity: 0, y: 20, duration: 0.8,
+    scrollTrigger: { trigger: '#outro', start: 'top 70%' }
+  });
+  document.querySelectorAll('.outro-cell').forEach((c, i) => {
+    c.style.opacity = 0; c.style.transform = 'translateY(20px)';
+    gsap.to(c, {
+      opacity: 1, y: 0, duration: 0.6, delay: i * 0.1,
+      scrollTrigger: { trigger: '#outro', start: 'top 60%' }
+    });
+  });
+  gsap.to('.outro-float', {
+    y: -60, ease: 'none',
+    scrollTrigger: { trigger: '#outro', start: 'top bottom', end: 'bottom top', scrub: 2 }
+  });
+
+  window.addEventListener('resize', () => ScrollTrigger.refresh());
+</script>
+</body>
+</html>
